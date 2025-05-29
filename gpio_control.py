@@ -32,6 +32,7 @@ class GPIOControl:
         self.pin_states = {}
         self.pin_directions = {}
         self.pwm_objects = {}
+        self.current_robot_state_pin = None
 
     def cleanup(self):
         GPIO.cleanup()
@@ -139,3 +140,19 @@ class GPIOControl:
             print(f"PWM stopped on pin {pin}.")
         else:
             print(f"Warning: No PWM running on pin {pin}.")
+        
+    def set_robot_status_pattern(self, pin, robot_state, freq_hz = 50):
+        if not isinstance(robot_state, self.RobotState):
+            print("Error: Invalid robot state provided. Must be a member of GPIOControl.RobotState.")
+            return
+        
+        pulse_width_us = robot_state.value
+        self.set_pwm_pulse_width(pin, pulse_width_us, freq_hz)
+        self.current_robot_state_pin = pin
+
+    def clear_robot_status_pattern(self):
+        if self.current_robot_state_pin is not None:
+            self.stop_pwm(self.current_robot_state_pin)
+            self.current_robot_state_pin = None
+        else:
+            print("No robot status pattern is currently active")
