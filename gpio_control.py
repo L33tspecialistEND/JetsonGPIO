@@ -12,6 +12,20 @@ class GPIOControl:
         IN = GPIO.IN
         OUT = GPIO.OUT
 
+    class RobotState(Enum):
+        # Name            = Pulse width (microseconds)
+        DOCKED            = 1415    # Breath, Red
+        IDLE              = 1545    # Breath Slow (Colour 1)
+        TO_PICKUP_STATION = 1345    # Light Chase (Red)
+        AT_PICKUP_STATION = 1885    # Red
+        ITEM_PICKED_UP    = 1065    # Confetti
+        TO_DELIVERY       = 1355    # Light Chase (Blue)
+        AT_DELIVERY       = 1935    # Blue
+        ITEM_DELIVERED    = 1225    # Twinkles, Rainbow Palette
+        RETURNING         = 1365    # Light Chase (Gray)
+        CHARGING          = 1515    # Heartbeat Slow (Colour 1 - Green)
+        CRITICAL_ERROR    = 1445    # Strobe (Red)
+
     def __init__(self, mode = NumberingMode.BOARD):
         GPIO.setmode(mode.value)
         self.mode = mode
