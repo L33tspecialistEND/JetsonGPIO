@@ -17,6 +17,7 @@ class GPIOControl:
         self.mode = mode
         self.pin_states = {}
         self.pin_directions = {}
+        self.pwm_objects = {}
 
     def cleanup(self):
         GPIO.cleanup()
@@ -89,3 +90,38 @@ class GPIOControl:
 
         direction = self.pin_directions[pin]
         print(f"Pin {pin} is an {'input' if direction == self.Direction.IN else 'output'} pin.")
+
+    def setup_pwm(self, pin, freq_hz, initial_duty_cycle = 0):
+        if pin in self.pin_directions:
+            print(f"Warning: Pin {pin} is already configured as GPIO. Reconfigure for PWM.")
+            return
+        
+        if pin in self.pwm_objects:
+            print(f"Warning: PWM already configured on pin {pin}.")
+            return
+        
+        try:
+            p = GPIO.PWM(pin, freq_hz)
+            p.start(initial_duty_cycle)
+            self.pwm_objects[pin] = p
+            print(f"PWM set up on pin {pin} at {freq_hz} Hz with {initial_duty_cycle}% duty cycle.")
+        except Exception as e:
+            print(f"Error setting up PWM on pin {pin}: {e}. Ensure pinmux is configured.")
+
+    def set_pwm_pulse_width(self, pin, pulse_width_us, freq_hz = 50):
+        period_us = 1_000_000 / freq_hz
+        duty_cycle = (pulse_width_us / period_us) * 100
+
+        if pin not in self.pwm_objects:
+            self.setup_pwm(pin, freq_hz, duty_cycle)
+        else:
+            self.pwm_objects[pin].ChangeDutyCycle(duty_cycle)
+            print(f"PWM on pin {pin} set to {pulse_width_us}us pulse width ({duty_cycle:.2f}% duty cycle.)")
+
+    def stop_pwm(self, pin):
+        if pin in self.pwm_objects:
+            self.pwm_objects[pin].stop()
+            del self.pwm_objects[pin]
+            print(f"PWM stopped on pin {pin}.")
+        else:
+            print(f"Warning: No PWM running on pin {pin}.")
